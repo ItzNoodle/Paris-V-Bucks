@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TiltContainer } from './components/TiltContainer';
 import { CustomCursor } from './components/CustomCursor';
 import { ProgressBar } from './components/ProgressBar';
@@ -125,6 +125,8 @@ function App() {
   };
 
   const currentColor = LEVEL_COLORS[currentLevel] || '#ffffff';
+  // Memoize colors to prevent Particles re-render on every timer tick
+  const particleColors = useMemo(() => [currentColor], [currentColor]);
   const showSkipHint = levelTime > 20; // Show hint after 20 seconds (faster)
 
   return (
@@ -157,8 +159,7 @@ function App() {
       {/* Global Particles */}
       <div className="fixed inset-0 z-0 transition-opacity duration-1000 pointer-events-none">
         <Particles
-          key={currentLevel}
-          particleColors={[currentColor]}
+          particleColors={particleColors}
           particleCount={currentLevel === AppLevel.EYE ? 300 : 150}
           particleSpread={currentLevel === AppLevel.EYE ? 20 : 12}
           speed={currentLevel === AppLevel.EYE ? 0.05 : 0.15}
