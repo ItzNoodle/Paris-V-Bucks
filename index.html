@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Epic Games: V-Bucks Protocol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;700;900&family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'epic-dark': '#0f1014',
+              'epic-card': '#1e2029',
+              'epic-hover': '#2a2d3a',
+              'neon-blue': '#3b82f6',
+              'neon-yellow': '#fbbf24',
+              'neon-green': '#00ffc8',
+              'neon-orange': '#ff8c00',
+              'neon-purple': '#d946ef',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['Source Code Pro', 'monospace'],
+              display: ['Orbitron', 'sans-serif'],
+            },
+            animation: {
+              'spin-slow': 'spin 12s linear infinite',
+              'spin-super-slow': 'spin 20s linear infinite',
+              'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'rays': 'rays 4s linear infinite',
+            },
+            keyframes: {
+                rays: {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' }
+                }
+            },
+            boxShadow: {
+              'glow-blue': '0 0 20px rgba(59, 130, 246, 0.5)',
+              'glow-green': '0 0 20px rgba(0, 255, 200, 0.5)',
+              'glow-orange': '0 0 20px rgba(255, 140, 0, 0.5)',
+              'glow-purple': '0 0 20px rgba(217, 70, 239, 0.5)',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body, a, button, input, [role="button"] {
+        background-color: #0f1014;
+        cursor: none !important; /* Force hide default cursor */
+        overflow-x: hidden;
+      }
+      
+      /* 3D Transform Utilities */
+      .preserve-3d {
+        transform-style: preserve-3d;
+      }
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+      .backface-hidden {
+        backface-visibility: hidden;
+      }
+      .rotate-y-180 {
+        transform: rotateY(180deg);
+      }
+      .rotate-x-180 {
+        transform: rotateX(180deg);
+      }
+      
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1e2029;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #3b82f6;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #60a5fa;
+      }
+
+      /* Target Cursor CSS */
+      .target-cursor-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+        z-index: 9999;
+        mix-blend-mode: difference;
+        transform: translate(-50%, -50%);
+      }
+
+      .target-cursor-dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 4px;
+        height: 4px;
+        background: #fff;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        will-change: transform;
+      }
+
+      .target-cursor-corner {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        border: 3px solid #fff;
+        will-change: transform;
+      }
+
+      .corner-tl {
+        transform: translate(-150%, -150%);
+        border-right: none;
+        border-bottom: none;
+      }
+
+      .corner-tr {
+        transform: translate(50%, -150%);
+        border-left: none;
+        border-bottom: none;
+      }
+
+      .corner-br {
+        transform: translate(50%, 50%);
+        border-left: none;
+        border-top: none;
+      }
+
+      .corner-bl {
+        transform: translate(-150%, 50%);
+        border-right: none;
+        border-top: none;
+      }
+
+      /* Glare Hover CSS */
+      .glare-hover {
+        overflow: hidden;
+        position: relative;
+        display: grid;
+        place-items: center;
+      }
+
+      .glare-hover::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          var(--gh-angle),
+          hsla(0, 0%, 0%, 0) 60%,
+          var(--gh-rgba) 70%,
+          hsla(0, 0%, 0%, 0),
+          hsla(0, 0%, 0%, 0) 100%
+        );
+        transition: var(--gh-duration) ease;
+        background-size:
+          var(--gh-size) var(--gh-size),
+          100% 100%;
+        background-repeat: no-repeat;
+        background-position:
+          -100% -100%,
+          0 0;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      .glare-hover:hover::before {
+        background-position:
+          100% 100%,
+          0 0;
+      }
+
+      /* TextType CSS */
+      .text-type {
+        display: inline-block;
+        white-space: pre-wrap;
+      }
+      
+      .text-type__cursor {
+        margin-left: 0.25rem;
+        display: inline-block;
+        opacity: 1;
+      }
+      
+      .text-type__cursor--hidden {
+        display: none;
+      }
+
+      /* Particles CSS */
+      .particles-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0-rc-69d4b800-20241021",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0-rc-69d4b800-20241021/client",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "gsap": "https://aistudiocdn.com/gsap@3.12.5",
+    "ogl": "https://esm.sh/ogl@1.0.11",
+    "framer-motion": "https://esm.sh/framer-motion@10.17.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.1"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
