@@ -12,7 +12,6 @@ export const Level5Success: React.FC<LevelProps> = () => {
   const [revealed, setRevealed] = useState(false);
   const [isSending, setIsSending] = useState(false);
   
-  // We don't need controlled state for the inputs if we use native form submission
   const formRef = useRef<HTMLFormElement>(null);
 
   // Play success sound on mount
@@ -28,18 +27,42 @@ export const Level5Success: React.FC<LevelProps> = () => {
       }, 2000);
   };
 
-  const handleSubmitStart = () => {
+  const handleSubmitStart = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (isSending) return;
+
       setIsSending(true);
       playUISound('click');
       
-      // Since we are targeting a hidden iframe, we can't know exactly when it finishes 
-      // due to cross-origin security. We simulate a delay for better UX.
-      setTimeout(() => {
+      const formData = new FormData(formRef.current!);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+          const response = await fetch("https://formsubmit.co/ajax/itznoodle1@outlook.com", {
+              method: "POST",
+              headers: { 
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+              },
+              body: JSON.stringify(data)
+          });
+
+          if (response.ok) {
+              setFormSent(true);
+              playUISound('sent');
+              if (formRef.current) formRef.current.reset();
+          } else {
+              console.error("Form submission failed");
+              playUISound('error');
+              alert("Failed to send message. Please try again later.");
+          }
+      } catch (error) {
+          console.error("Network error:", error);
+          playUISound('error');
+          alert("Network error. Please check your connection.");
+      } finally {
           setIsSending(false);
-          setFormSent(true);
-          playUISound('sent');
-          if (formRef.current) formRef.current.reset();
-      }, 1500);
+      }
   };
 
   return (
@@ -133,7 +156,7 @@ export const Level5Success: React.FC<LevelProps> = () => {
                                 <h3 className="text-xl font-bold text-white">Message Sent!</h3>
                                 <p className="text-gray-400 text-xs mt-1 max-w-[200px] leading-relaxed">
                                     <span className="text-yellow-400 font-bold block mb-1">IMPORTANT:</span>
-                                    If you haven't received it, check your <span className="text-white underline">Spam/Junk</span> folder for an activation email from FormSubmit.
+                                    If you haven't received it, check your <span className="text-white underline">Spam/Junk</span> folder.
                                 </p>
                                 <button 
                                     onClick={() => { setFormSent(false); setShowContactForm(false); }}
@@ -144,14 +167,8 @@ export const Level5Success: React.FC<LevelProps> = () => {
                             </div>
                         ) : (
                             <div className="relative">
-                                {/* The Hidden Iframe that catches the response to prevent redirect */}
-                                <iframe name="hiddenFrame" title="hiddenFrame" style={{ display: 'none' }}></iframe>
-
                                 <form 
                                     ref={formRef}
-                                    action="https://formsubmit.co/itznoodle1@outlook.com" 
-                                    method="POST"
-                                    target="hiddenFrame"
                                     onSubmit={handleSubmitStart}
                                     className={`bg-gray-800 border border-gray-700 p-6 rounded-xl flex flex-col gap-4 shadow-xl text-left transition-all duration-700`}
                                 >
